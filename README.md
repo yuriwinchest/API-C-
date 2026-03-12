@@ -67,6 +67,28 @@ Testes:
 dotnet test .\tests\OneFlowApis.Tests\OneFlowApis.Tests.csproj
 ```
 
+## Como rodar localmente e abrir a interface grafica
+
+1. Entre na pasta do projeto.
+2. Execute:
+
+```bash
+dotnet run --project .\OneFlowApis.csproj
+```
+
+3. Quando a API subir, abra no navegador:
+
+- Swagger UI: [http://localhost:3000/docs](http://localhost:3000/docs)
+- Scalar API Reference: [http://localhost:3000/scalar](http://localhost:3000/scalar)
+- OpenAPI JSON: [http://localhost:3000/swagger/v1/swagger.json](http://localhost:3000/swagger/v1/swagger.json)
+- Healthcheck: [http://localhost:3000/health](http://localhost:3000/health)
+
+Observacoes:
+
+- Se a porta no `.env` for diferente de `3000`, substitua a porta nas URLs acima.
+- Se `INTERNAL_API_KEY` estiver preenchida no `.env`, os endpoints `/api/oneflow/...` exigirao o header `X-Internal-Api-Key`.
+- O Swagger e o Scalar servem para explorar e testar os endpoints visualmente no ambiente local.
+
 ## Acesso e documentacao interativa
 
 - Swagger UI: `/docs`
