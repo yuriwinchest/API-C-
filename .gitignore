@@ -3,3 +3,9 @@ dist
 .env
 .env.local
 coverage
+bin
+obj
+TestResults
+.vs
+*.user
+*.suo
