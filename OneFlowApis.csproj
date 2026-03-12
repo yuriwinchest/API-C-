@@ -11,4 +11,9 @@
     <Content Remove="tests\**" />
     <None Remove="tests\**" />
   </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Scalar.AspNetCore" Version="2.12.36" />
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
+  </ItemGroup>
 </Project>

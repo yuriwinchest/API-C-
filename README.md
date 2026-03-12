@@ -10,12 +10,13 @@ Este projeto expoe uma API interna organizada e validada, que faz proxy para os 
 
 - .NET 8
 - ASP.NET Core Minimal API
+- Swagger / OpenAPI
 - xUnit
 
 ## Configuracao
 
 1. Copie `.env.example` para `.env`.
-2. Preencha as variaveis de autenticacao do OneFlow.
+2. Preencha as variaveis de autenticacao interna e do OneFlow.
 3. Execute os comandos:
 
 ```bash
@@ -32,9 +33,16 @@ dotnet build
 | `OMIE_PORTAL_APPS_BASE_URL` | Nao | Base do portal Omie usada na renovacao do token. |
 | `OMIE_APP_KEY` | Futuro uso | Campo reservado para a `App Key` do Omie. |
 | `OMIE_APP_SECRET` | Futuro uso | Campo reservado para o `App Secret` do Omie. |
+| `INTERNAL_API_KEY_HEADER_NAME` | Nao | Header usado para proteger a API interna. Padrao: `X-Internal-Api-Key`. |
+| `INTERNAL_API_KEY` | Recomendado | Chave da autenticacao interna da API. Enquanto nao for preenchida, a protecao fica desabilitada. |
 | `ONEFLOW_COMPANY_TOKEN` | Sim | Token JWT da empresa usado no header `Authorization: Bearer <token>`. |
 | `ONEFLOW_COMPANY_REFRESH_TOKEN` | Recomendado | Refresh token da empresa para renovacao automatica. |
 | `ONEFLOW_COMPANY_APP_HASH` | Recomendado | `app_hash` da empresa no OneFlow, necessario para renovar o token. |
+| `ONEFLOW_HTTP_TIMEOUT_SECONDS` | Nao | Timeout por tentativa para chamadas ao OneFlow. Padrao: `30`. |
+| `ONEFLOW_HTTP_RETRY_COUNT` | Nao | Quantidade de tentativas extras para chamadas idempotentes (`GET`). Padrao: `2`. |
+| `ONEFLOW_HTTP_RETRY_BASE_DELAY_MS` | Nao | Delay base entre tentativas em milissegundos. Padrao: `500`. |
+| `ONEFLOW_HTTP_CIRCUIT_BREAKER_FAILURE_THRESHOLD` | Nao | Numero de falhas consecutivas para abrir o circuit breaker. Padrao: `5`. |
+| `ONEFLOW_HTTP_CIRCUIT_BREAKER_BREAK_SECONDS` | Nao | Tempo em segundos com o circuito aberto. Padrao: `30`. |
 | `GCLICK_BASE_URL` | Nao | URL base reservada para a integracao com o G-Click. |
 | `GCLICK_CLIENT_ID` | Futuro uso | Campo reservado para o `Client ID` do G-Click. |
 | `GCLICK_CLIENT_SECRET` | Futuro uso | Campo reservado para o `Client Secret` do G-Click. |
@@ -59,6 +67,13 @@ Testes:
 dotnet test .\tests\OneFlowApis.Tests\OneFlowApis.Tests.csproj
 ```
 
+## Acesso e documentacao interativa
+
+- Swagger UI: `/docs`
+- Scalar API Reference: `/scalar`
+- OpenAPI JSON: `/swagger/v1/swagger.json`
+- Header da API interna: `X-Internal-Api-Key: SUA_CHAVE`
+
 ## Healthcheck
 
 ```http
@@ -81,6 +96,22 @@ GET /api/oneflow/configuracao/status
 ```
 
 Esse endpoint nao expoe segredos. Ele informa apenas se os campos obrigatorios e opcionais ja foram preenchidos para OneFlow, Omie e G-Click.
+
+## Seguranca aplicada
+
+- Autenticacao interna por header configuravel.
+- Segredos mantidos apenas em variaveis de ambiente.
+- Comparacao da chave interna em tempo constante.
+- Middleware centralizado de tratamento de erros.
+- Endpoint de diagnostico sem exposicao de segredos.
+
+## Resiliencia e escalabilidade
+
+- Timeout por tentativa para chamadas ao upstream.
+- Retry apenas para chamadas idempotentes (`GET`, `HEAD`, `OPTIONS`) para evitar duplicidade em operacoes de escrita.
+- Circuit breaker para reduzir cascata de falhas quando o OneFlow estiver indisponivel.
+- Logging estruturado em JSON com correlation id no header `X-Correlation-ID`.
+- Rotas modularizadas por dominio: fiscal, folha, contabilidade, obrigacoes e diagnostico.
 
 ## Endpoints internos
 
@@ -171,6 +202,7 @@ Os aliases foram adicionados para:
 ## Observacoes importantes
 
 - O repositorio nao versiona segredos.
+- A autenticacao interna fica desabilitada ate que `INTERNAL_API_KEY` seja preenchida no `.env`.
 - `App Key` e `App Secret` do Omie nao substituem o `ONEFLOW_COMPANY_TOKEN`.
 - A API ficou preparada para renovar automaticamente o token da empresa quando `ONEFLOW_COMPANY_REFRESH_TOKEN` e `ONEFLOW_COMPANY_APP_HASH` forem informados.
 - Os payloads `POST` foram mantidos flexiveis para receber o JSON final conforme a modelagem oficial do OneFlow.

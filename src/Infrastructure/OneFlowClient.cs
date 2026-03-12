@@ -1,6 +1,7 @@
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
+using Microsoft.Extensions.Logging;
 using OneFlowApis.Models;
 
 namespace OneFlowApis.Infrastructure;
@@ -15,15 +16,21 @@ public sealed class OneFlowClient
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly OneFlowOptions _options;
     private readonly OneFlowAuthManager _authManager;
+    private readonly OneFlowResiliencePolicy _resiliencePolicy;
+    private readonly ILogger<OneFlowClient> _logger;
 
     public OneFlowClient(
         IHttpClientFactory httpClientFactory,
         OneFlowOptions options,
-        OneFlowAuthManager authManager)
+        OneFlowAuthManager authManager,
+        OneFlowResiliencePolicy resiliencePolicy,
+        ILogger<OneFlowClient> logger)
     {
         _httpClientFactory = httpClientFactory;
         _options = options;
         _authManager = authManager;
+        _resiliencePolicy = resiliencePolicy;
+        _logger = logger;
     }
 
     public async Task<UpstreamResponse> SendAsync(
@@ -33,24 +40,36 @@ public sealed class OneFlowClient
         object? body,
         CancellationToken cancellationToken)
     {
-        var token = _authManager.GetCompanyTokenOrThrow();
-
-        try
-        {
-            return await ExecuteAsync(method, path, query, body, token, cancellationToken);
-        }
-        catch (AppException exception) when (exception.StatusCode == 401 && _authManager.CanRefresh)
-        {
-            var refreshedToken = await _authManager.RefreshCompanyTokenAsync(cancellationToken);
-            return await ExecuteAsync(method, path, query, body, refreshedToken, cancellationToken);
-        }
-        catch (HttpRequestException exception)
-        {
-            throw new AppException(502, "Erro de comunicacao com a API do OneFlow.", new
+        return await _resiliencePolicy.ExecuteAsync(
+            method,
+            path,
+            async innerCancellationToken =>
             {
-                causa = exception.Message
-            });
-        }
+                var token = _authManager.GetCompanyTokenOrThrow();
+
+                try
+                {
+                    return await ExecuteAsync(method, path, query, body, token, innerCancellationToken);
+                }
+                catch (AppException exception) when (exception.StatusCode == 401 && _authManager.CanRefresh)
+                {
+                    _logger.LogWarning(
+                        "Recebido 401 do OneFlow para {Method} {Path}. Tentando renovar o token.",
+                        method.Method,
+                        path);
+
+                    var refreshedToken = await _authManager.RefreshCompanyTokenAsync(innerCancellationToken);
+                    return await ExecuteAsync(method, path, query, body, refreshedToken, innerCancellationToken);
+                }
+                catch (HttpRequestException exception)
+                {
+                    throw new AppException(502, "Erro de comunicacao com a API do OneFlow.", new
+                    {
+                        causa = exception.Message
+                    });
+                }
+            },
+            cancellationToken);
     }
 
     private async Task<UpstreamResponse> ExecuteAsync(
@@ -61,7 +80,8 @@ public sealed class OneFlowClient
         string token,
         CancellationToken cancellationToken)
     {
-        var client = _httpClientFactory.CreateClient();
+        var startedAt = DateTimeOffset.UtcNow;
+        var client = _httpClientFactory.CreateClient("OneFlowUpstream");
         var request = new HttpRequestMessage(method, BuildUrl(path, query));
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
         request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
@@ -78,6 +98,14 @@ public sealed class OneFlowClient
         var response = await client.SendAsync(request, cancellationToken);
         var content = await response.Content.ReadAsStringAsync(cancellationToken);
         var contentType = response.Content.Headers.ContentType?.ToString() ?? "application/json";
+        var elapsedMs = (DateTimeOffset.UtcNow - startedAt).TotalMilliseconds;
+
+        _logger.LogInformation(
+            "Chamada OneFlow {Method} {Path} respondeu {StatusCode} em {ElapsedMs} ms.",
+            method.Method,
+            path,
+            (int)response.StatusCode,
+            elapsedMs);
 
         if (!response.IsSuccessStatusCode)
         {

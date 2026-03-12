@@ -1,4 +1,5 @@
 using System.Text.Json;
+using Microsoft.Extensions.Logging;
 using OneFlowApis.Models;
 
 namespace OneFlowApis.Middlewares;
@@ -6,10 +7,12 @@ namespace OneFlowApis.Middlewares;
 public sealed class ErrorHandlingMiddleware
 {
     private readonly RequestDelegate _next;
+    private readonly ILogger<ErrorHandlingMiddleware> _logger;
 
-    public ErrorHandlingMiddleware(RequestDelegate next)
+    public ErrorHandlingMiddleware(RequestDelegate next, ILogger<ErrorHandlingMiddleware> logger)
     {
         _next = next;
+        _logger = logger;
     }
 
     public async Task InvokeAsync(HttpContext context)
@@ -20,6 +23,13 @@ public sealed class ErrorHandlingMiddleware
         }
         catch (AppException exception)
         {
+            _logger.LogWarning(
+                exception,
+                "Falha controlada na requisicao {Method} {Path} com status {StatusCode}.",
+                context.Request.Method,
+                context.Request.Path,
+                exception.StatusCode);
+
             context.Response.StatusCode = exception.StatusCode;
             context.Response.ContentType = "application/json";
 
@@ -31,6 +41,12 @@ public sealed class ErrorHandlingMiddleware
         }
         catch (BadHttpRequestException exception)
         {
+            _logger.LogWarning(
+                exception,
+                "Falha ao desserializar o corpo da requisicao {Method} {Path}.",
+                context.Request.Method,
+                context.Request.Path);
+
             context.Response.StatusCode = 400;
             context.Response.ContentType = "application/json";
 
@@ -40,8 +56,14 @@ public sealed class ErrorHandlingMiddleware
                 detalhes = exception.Message
             }));
         }
-        catch (Exception)
+        catch (Exception exception)
         {
+            _logger.LogError(
+                exception,
+                "Erro interno nao tratado na requisicao {Method} {Path}.",
+                context.Request.Method,
+                context.Request.Path);
+
             context.Response.StatusCode = 500;
             context.Response.ContentType = "application/json";
 

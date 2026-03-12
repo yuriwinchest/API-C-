@@ -1,6 +1,7 @@
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
+using Microsoft.Extensions.Logging;
 using OneFlowApis.Models;
 
 namespace OneFlowApis.Infrastructure;
@@ -14,15 +15,20 @@ public sealed class OneFlowAuthManager
 
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly OneFlowOptions _options;
+    private readonly ILogger<OneFlowAuthManager> _logger;
     private readonly SemaphoreSlim _refreshLock = new(1, 1);
 
     private string? _token;
     private string? _refreshToken;
 
-    public OneFlowAuthManager(IHttpClientFactory httpClientFactory, OneFlowOptions options)
+    public OneFlowAuthManager(
+        IHttpClientFactory httpClientFactory,
+        OneFlowOptions options,
+        ILogger<OneFlowAuthManager> logger)
     {
         _httpClientFactory = httpClientFactory;
         _options = options;
+        _logger = logger;
         _token = options.CompanyToken;
         _refreshToken = options.CompanyRefreshToken;
     }
@@ -56,7 +62,9 @@ public sealed class OneFlowAuthManager
         await _refreshLock.WaitAsync(cancellationToken);
         try
         {
-            var client = _httpClientFactory.CreateClient();
+            _logger.LogInformation("Iniciando renovacao do token da empresa no portal Omie.");
+
+            var client = _httpClientFactory.CreateClient("OmiePortal");
             var baseUrl = _options.OmiePortalAppsBaseUrl.TrimEnd('/');
             var request = new HttpRequestMessage(
                 HttpMethod.Get,
@@ -92,6 +100,8 @@ public sealed class OneFlowAuthManager
 
             _token = refreshResponse.Token;
             _refreshToken = refreshResponse.RefreshToken;
+
+            _logger.LogInformation("Token da empresa renovado com sucesso.");
 
             return _token;
         }
