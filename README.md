@@ -210,6 +210,7 @@ Esse endpoint nao expoe segredos. Ele informa apenas se os campos obrigatorios e
 | `GET` | `/api/oneflow/folha/trabalhadores/eventos` | `/oneflow/empresa/folha/trabalhador/eventos` |
 | `GET` | `/api/oneflow/folha/rubricas/dados-basicos` | `/oneflow/empresa/folha/rubrica/dadosbasicos` |
 | `GET` | `/api/oneflow/folha/holerites/totais` | `/oneflow/empresa/folha/recibos/totais` |
+| `GET` | `/api/oneflow/folha/holerites/totais/competencia` | Alias legado para `/oneflow/empresa/folha/recibos/totais` |
 | `GET` | `/api/oneflow/folha/datas` | `/oneflow/empresa/folha/datas` |
 | `GET` | `/api/oneflow/folha/status` | `/oneflow/empresa/folha/statusfolha` |
 | `GET` | `/api/oneflow/folha/fator-r` | `/oneflow/empresa/folha/fatorr` |
@@ -281,9 +282,32 @@ Para reduzir atrito com a documentacao operacional do cliente, a API expoe dois 
 Os aliases foram adicionados para:
 
 - fiscal: `nfsenacional/incluir`, `nfseprefeitura/incluir`, `nfse/remove`, `nfsestatus/alterar`, `total/competencia`, `documentos/total/competencia`, `apuracao/competencia/imposto`, `aliquotas/simplesnacional/competencia`
-- folha: `variaveisfolha`, `dadosbasicostrabalhador/competencia`, `eventosdostrabalhadores/competencia`, `statusfolha/competencia`, `datasconfigurada/competencia`, `fatorr/competencia`, `recibos/totais/competencia`
+- folha: `variaveisfolha`, `dadosbasicostrabalhador/competencia`, `eventosdostrabalhadores/competencia`, `statusfolha/competencia`, `datasconfigurada/competencia`, `fatorr/competencia`, `recibos/totais/competencia`, `holerites/totais/competencia`
 - contabilidade: `planocontas`, `lancamentos/conta`, `lancamentoscontabeis`, `lancamentoscontabeis/transacao`, `lancamentoscontabeis/padrao`, `lancamentoscontabeis/id`
 - obrigacoes: `obrigacao/anexo`
+
+## Contrato homologado com o cliente
+
+Lista consolidada dos endpoints solicitados para integracao:
+
+### Modulo: Folha de Pagamento e Trabalhador
+
+- Detalhamento de notas: `GET /api/oneflow/fiscal/documentos/total/competencia`
+- Variaveis da folha: `POST /api/oneflow/folha/variaveisfolha`
+- Dados basicos do trabalhador: `GET /api/oneflow/folha/dadosbasicostrabalhador/competencia`
+- Eventos do trabalhador e ferias: `GET /api/oneflow/folha/eventosdostrabalhadores/competencia`
+- Holerites e totais de recibos: `GET /api/oneflow/folha/holerites/totais/competencia`
+- Datas da folha: `GET /api/oneflow/folha/datasconfigurada/competencia`
+
+### Modulo: Contabilidade e BI
+
+- Inclusao de lancamentos contabeis: `POST /api/oneflow/contabilidade/lancamentoscontabeis`
+- Geracao de balancete e relatorios contabeis: `GET /api/oneflow/contabilidade/balancete`
+
+### Modulo: Guias e Obrigacoes
+
+- Listagem geral de guias e obrigacoes: `GET /api/oneflow/guias/obrigacoes/geral`
+- Consulta de anexos por competencia e codigo: `GET /api/oneflow/obrigacao/anexo`
 
 ## Observacoes importantes
 

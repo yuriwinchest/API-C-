@@ -48,7 +48,7 @@ public static class FiscalEndpoints
         fiscal.MapGet("/documentos/total/competencia", async (HttpRequest request, OneFlowService service, CancellationToken cancellationToken) =>
         {
             var competencia = RequestValidators.RequiredCompetencia(request.Query["competencia"], "competencia");
-            var response = await service.GetDocumentosListarAsync(competencia, cancellationToken);
+            var response = await service.GetDocumentosTotaisAsync(competencia, cancellationToken);
             return response.ToResult();
         });
 

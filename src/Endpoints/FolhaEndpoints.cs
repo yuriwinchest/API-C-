@@ -85,6 +85,15 @@ public static class FolhaEndpoints
             return response.ToResult();
         });
 
+        folha.MapGet("/holerites/totais/competencia", async (HttpRequest request, OneFlowService service, CancellationToken cancellationToken) =>
+        {
+            var competencia = RequestValidators.RequiredCompetencia(request.Query["competencia"], "competencia");
+            var tipoFolha = RequestValidators.RequiredPositiveInt(request.Query["tipoFolha"], "tipoFolha");
+
+            var response = await service.GetHoleritesTotaisAsync(competencia, tipoFolha, cancellationToken);
+            return response.ToResult();
+        });
+
         folha.MapGet("/datas", async (HttpRequest request, OneFlowService service, CancellationToken cancellationToken) =>
         {
             var competencia = RequestValidators.RequiredCompetencia(request.Query["competencia"], "competencia");

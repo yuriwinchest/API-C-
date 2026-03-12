@@ -53,6 +53,27 @@ Fluxo recomendado:
 - `GET /api/oneflow/configuracao/status`
 - `GET /api/oneflow/guias/obrigacoes/geral`
 
+## Contrato homologado para integracao
+
+### Modulo: Folha de Pagamento e Trabalhador
+
+- Detalhamento de notas: `GET /api/oneflow/fiscal/documentos/total/competencia`
+- Variaveis da folha: `POST /api/oneflow/folha/variaveisfolha`
+- Dados basicos do trabalhador: `GET /api/oneflow/folha/dadosbasicostrabalhador/competencia`
+- Eventos do trabalhador e ferias: `GET /api/oneflow/folha/eventosdostrabalhadores/competencia`
+- Holerites e totais de recibos: `GET /api/oneflow/folha/holerites/totais/competencia`
+- Datas da folha: `GET /api/oneflow/folha/datasconfigurada/competencia`
+
+### Modulo: Contabilidade e BI
+
+- Inclusao de lancamentos contabeis: `POST /api/oneflow/contabilidade/lancamentoscontabeis`
+- Geracao de balancete e relatorios contabeis: `GET /api/oneflow/contabilidade/balancete`
+
+### Modulo: Guias e Obrigacoes
+
+- Listagem geral de guias e obrigacoes: `GET /api/oneflow/guias/obrigacoes/geral`
+- Consulta de anexos por competencia e codigo: `GET /api/oneflow/obrigacao/anexo`
+
 ## Evidencia minima esperada antes da homologacao
 
 - `GET /health` retorna `200`
