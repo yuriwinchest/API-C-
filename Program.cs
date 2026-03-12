@@ -1,4 +1,5 @@
 using System.Text.Json;
+using Microsoft.AspNetCore.Mvc;
 using OneFlowApis.Infrastructure;
 using OneFlowApis.Middlewares;
 using OneFlowApis.Models;
@@ -30,6 +31,37 @@ app.MapGet("/health", () => Results.Ok(new
 
 var api = app.MapGroup("/api/oneflow");
 
+api.MapGet("/configuracao/status", (OneFlowOptions options) => Results.Ok(new
+{
+    oneFlow = new
+    {
+        baseUrl = options.OneFlowBaseUrl,
+        tokenConfigurado = !string.IsNullOrWhiteSpace(options.CompanyToken),
+        refreshTokenConfigurado = !string.IsNullOrWhiteSpace(options.CompanyRefreshToken),
+        appHashConfigurado = !string.IsNullOrWhiteSpace(options.CompanyAppHash)
+    },
+    omie = new
+    {
+        portalAppsBaseUrl = options.OmiePortalAppsBaseUrl,
+        appKeyConfigurada = !string.IsNullOrWhiteSpace(options.OmieAppKey),
+        appSecretConfigurado = !string.IsNullOrWhiteSpace(options.OmieAppSecret)
+    },
+    gClick = new
+    {
+        baseUrl = options.GClickBaseUrl,
+        clientIdConfigurado = !string.IsNullOrWhiteSpace(options.GClickClientId),
+        clientSecretConfigurado = !string.IsNullOrWhiteSpace(options.GClickClientSecret)
+    },
+    prontoParaTesteOneFlow = !string.IsNullOrWhiteSpace(options.CompanyToken),
+    prontoParaRenovacaoAutomatica =
+        !string.IsNullOrWhiteSpace(options.CompanyToken) &&
+        !string.IsNullOrWhiteSpace(options.CompanyRefreshToken) &&
+        !string.IsNullOrWhiteSpace(options.CompanyAppHash),
+    prontoParaGClick =
+        !string.IsNullOrWhiteSpace(options.GClickClientId) &&
+        !string.IsNullOrWhiteSpace(options.GClickClientSecret)
+}));
+
 api.MapGet("/fiscal/documentos/totais", async (HttpRequest request, OneFlowService service, CancellationToken cancellationToken) =>
 {
     var competencia = RequestValidators.RequiredCompetencia(request.Query["competencia"], "competencia");
@@ -58,6 +90,13 @@ api.MapGet("/fiscal/documentos/listar", async (HttpRequest request, OneFlowServi
     return response.ToResult();
 });
 
+api.MapGet("/fiscal/documentos/por-socio", async (HttpRequest request, OneFlowService service, CancellationToken cancellationToken) =>
+{
+    var competencia = RequestValidators.RequiredCompetencia(request.Query["competencia"], "competencia");
+    var response = await service.GetDocumentosPorSocioAsync(competencia, cancellationToken);
+    return response.ToResult();
+});
+
 api.MapGet("/fiscal/documentos/total/competencia", async (HttpRequest request, OneFlowService service, CancellationToken cancellationToken) =>
 {
     var competencia = RequestValidators.RequiredCompetencia(request.Query["competencia"], "competencia");
@@ -69,6 +108,14 @@ api.MapGet("/fiscal/apuracoes", async (HttpRequest request, OneFlowService servi
 {
     var competencia = RequestValidators.RequiredCompetencia(request.Query["competencia"], "competencia");
     var response = await service.GetApuracoesFiscaisAsync(competencia, cancellationToken);
+    return response.ToResult();
+});
+
+api.MapGet("/fiscal/apuracoes/resumo", async (HttpRequest request, OneFlowService service, CancellationToken cancellationToken) =>
+{
+    var competencia = RequestValidators.RequiredCompetencia(request.Query["competencia"], "competencia");
+    var imposto = RequestValidators.RequiredString(request.Query["imposto"], "imposto");
+    var response = await service.GetResumoApuracaoFiscalAsync(competencia, imposto, cancellationToken);
     return response.ToResult();
 });
 
@@ -108,6 +155,12 @@ api.MapPost("/fiscal/nfsenacional/incluir", async (JsonElement body, OneFlowServ
 api.MapPost("/fiscal/nfse/prefeitura", async (JsonElement body, OneFlowService service, CancellationToken cancellationToken) =>
 {
     var response = await service.PostFiscalNfsePrefeituraAsync(body, cancellationToken);
+    return response.ToResult();
+});
+
+api.MapPost("/fiscal/nfse/layout-oneflow", async (JsonElement body, OneFlowService service, CancellationToken cancellationToken) =>
+{
+    var response = await service.PostFiscalNfseLayoutOneFlowAsync(body, cancellationToken);
     return response.ToResult();
 });
 
@@ -184,6 +237,14 @@ api.MapGet("/folha/trabalhadores/eventos", async (HttpRequest request, OneFlowSe
     RequestValidators.RequireAtLeastOne(cpf, matricula, "cpf", "matricula");
 
     var response = await service.GetTrabalhadorEventosAsync(competencia, cpf, matricula, idEvento, cancellationToken);
+    return response.ToResult();
+});
+
+api.MapGet("/folha/rubricas/dados-basicos", async (HttpRequest request, OneFlowService service, CancellationToken cancellationToken) =>
+{
+    var competencia = RequestValidators.RequiredCompetencia(request.Query["competencia"], "competencia");
+    var rubrica = RequestValidators.OptionalString(request.Query["rubrica"]);
+    var response = await service.GetRubricasDadosBasicosAsync(competencia, rubrica, cancellationToken);
     return response.ToResult();
 });
 
@@ -265,7 +326,19 @@ api.MapPost("/contabilidade/lancamentos", async (JsonElement body, OneFlowServic
     return response.ToResult();
 });
 
+api.MapPost("/contabilidade/lancamentoscontabeis", async (JsonElement body, OneFlowService service, CancellationToken cancellationToken) =>
+{
+    var response = await service.PostLancamentoContabilAsync(body, cancellationToken);
+    return response.ToResult();
+});
+
 api.MapPost("/contabilidade/lancamentos/transacao", async (JsonElement body, OneFlowService service, CancellationToken cancellationToken) =>
+{
+    var response = await service.PostLancamentoContabilTransacaoAsync(body, cancellationToken);
+    return response.ToResult();
+});
+
+api.MapPost("/contabilidade/lancamentoscontabeis/transacao", async (JsonElement body, OneFlowService service, CancellationToken cancellationToken) =>
 {
     var response = await service.PostLancamentoContabilTransacaoAsync(body, cancellationToken);
     return response.ToResult();
@@ -277,7 +350,19 @@ api.MapPost("/contabilidade/lancamentos/padrao", async (JsonElement body, OneFlo
     return response.ToResult();
 });
 
+api.MapPost("/contabilidade/lancamentoscontabeis/padrao", async (JsonElement body, OneFlowService service, CancellationToken cancellationToken) =>
+{
+    var response = await service.PostLancamentoContabilPadraoAsync(body, cancellationToken);
+    return response.ToResult();
+});
+
 api.MapPost("/contabilidade/lancamentos/excluir", async (JsonElement body, OneFlowService service, CancellationToken cancellationToken) =>
+{
+    var response = await service.PostExcluirLancamentoContabilAsync(body, cancellationToken);
+    return response.ToResult();
+});
+
+api.MapDelete("/contabilidade/lancamentoscontabeis/id", async ([FromBody] JsonElement body, OneFlowService service, CancellationToken cancellationToken) =>
 {
     var response = await service.PostExcluirLancamentoContabilAsync(body, cancellationToken);
     return response.ToResult();
@@ -289,7 +374,19 @@ api.MapPost("/contabilidade/lancamentos/excluir-transacao", async (JsonElement b
     return response.ToResult();
 });
 
+api.MapDelete("/contabilidade/lancamentoscontabeis/transacao", async ([FromBody] JsonElement body, OneFlowService service, CancellationToken cancellationToken) =>
+{
+    var response = await service.PostExcluirLancamentoContabilTransacaoAsync(body, cancellationToken);
+    return response.ToResult();
+});
+
 api.MapPost("/contabilidade/lancamentos/excluir-padrao", async (JsonElement body, OneFlowService service, CancellationToken cancellationToken) =>
+{
+    var response = await service.PostExcluirLancamentoContabilPadraoAsync(body, cancellationToken);
+    return response.ToResult();
+});
+
+api.MapDelete("/contabilidade/lancamentoscontabeis/padrao", async ([FromBody] JsonElement body, OneFlowService service, CancellationToken cancellationToken) =>
 {
     var response = await service.PostExcluirLancamentoContabilPadraoAsync(body, cancellationToken);
     return response.ToResult();
@@ -346,6 +443,33 @@ api.MapGet("/contabilidade/lancamentos/conta", async (HttpRequest request, OneFl
 });
 
 api.MapGet("/guias/anexos", async (HttpRequest request, OneFlowService service, CancellationToken cancellationToken) =>
+{
+    var competencia = RequestValidators.RequiredCompetencia(request.Query["competencia"], "competencia");
+    var codigo = RequestValidators.RequiredString(request.Query["codigo"], "codigo");
+
+    var response = await service.GetObrigacoesAnexosAsync(competencia, codigo, cancellationToken);
+    return response.ToResult();
+});
+
+api.MapGet("/guias/obrigacoes/geral", async (OneFlowService service, CancellationToken cancellationToken) =>
+{
+    var response = await service.GetObrigacoesGeralAsync(cancellationToken);
+    return response.ToResult();
+});
+
+api.MapGet("/guias/obrigacoes/listar", async (OneFlowService service, CancellationToken cancellationToken) =>
+{
+    var response = await service.GetObrigacoesListarAsync(cancellationToken);
+    return response.ToResult();
+});
+
+api.MapPost("/guias/obrigacoes/incluir", async (JsonElement body, OneFlowService service, CancellationToken cancellationToken) =>
+{
+    var response = await service.PostObrigacoesIncluirAsync(body, cancellationToken);
+    return response.ToResult();
+});
+
+api.MapGet("/obrigacao/anexo", async (HttpRequest request, OneFlowService service, CancellationToken cancellationToken) =>
 {
     var competencia = RequestValidators.RequiredCompetencia(request.Query["competencia"], "competencia");
     var codigo = RequestValidators.RequiredString(request.Query["codigo"], "codigo");

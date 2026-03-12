@@ -1,5 +1,6 @@
 using System.Net;
 using System.Net.Http.Json;
+using System.Text.Json;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Xunit;
 
@@ -65,5 +66,34 @@ public sealed class HealthcheckTests : IClassFixture<WebApplicationFactory<Progr
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
         Assert.NotNull(payload);
         Assert.Equal("Falha de validacao da requisicao.", payload["mensagem"]?.ToString());
+    }
+
+    [Fact]
+    public async Task ApuracoesResumo_DeveExigirImposto()
+    {
+        using var client = _factory.CreateClient();
+
+        var response = await client.GetAsync("/api/oneflow/fiscal/apuracoes/resumo?competencia=202501");
+        var payload = await response.Content.ReadFromJsonAsync<Dictionary<string, object>>();
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.NotNull(payload);
+        Assert.Equal("Falha de validacao da requisicao.", payload["mensagem"]?.ToString());
+    }
+
+    [Fact]
+    public async Task ConfiguracaoStatus_DeveResponderSemExporSegredos()
+    {
+        using var client = _factory.CreateClient();
+
+        var response = await client.GetAsync("/api/oneflow/configuracao/status");
+        var payload = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.True(payload.RootElement.TryGetProperty("oneFlow", out var oneFlow));
+        Assert.True(oneFlow.TryGetProperty("tokenConfigurado", out _));
+        Assert.False(oneFlow.TryGetProperty("token", out _));
+        Assert.True(payload.RootElement.TryGetProperty("gClick", out _));
+        Assert.True(payload.RootElement.TryGetProperty("omie", out _));
     }
 }

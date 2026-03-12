@@ -37,11 +37,31 @@ public sealed class OneFlowService
             null,
             cancellationToken);
 
+    public Task<UpstreamResponse> GetDocumentosPorSocioAsync(string competencia, CancellationToken cancellationToken) =>
+        _client.SendAsync(
+            HttpMethod.Get,
+            "oneflow/empresa/fiscal/documentos/porsocio",
+            new Dictionary<string, string?> { ["competencia"] = competencia },
+            null,
+            cancellationToken);
+
     public Task<UpstreamResponse> GetApuracoesFiscaisAsync(string competencia, CancellationToken cancellationToken) =>
         _client.SendAsync(
             HttpMethod.Get,
             "oneflow/empresa/fiscal/apuracao/listar",
             new Dictionary<string, string?> { ["competencia"] = competencia },
+            null,
+            cancellationToken);
+
+    public Task<UpstreamResponse> GetResumoApuracaoFiscalAsync(string competencia, string imposto, CancellationToken cancellationToken) =>
+        _client.SendAsync(
+            HttpMethod.Get,
+            "oneflow/empresa/fiscal/apuracao/resumo",
+            new Dictionary<string, string?>
+            {
+                ["competencia"] = competencia,
+                ["imposto"] = imposto
+            },
             null,
             cancellationToken);
 
@@ -65,6 +85,14 @@ public sealed class OneFlowService
         _client.SendAsync(
             HttpMethod.Post,
             "oneflow/empresa/fiscal/nfse/prefeitura",
+            null,
+            body,
+            cancellationToken);
+
+    public Task<UpstreamResponse> PostFiscalNfseLayoutOneFlowAsync(JsonElement body, CancellationToken cancellationToken) =>
+        _client.SendAsync(
+            HttpMethod.Post,
+            "oneflow/empresa/fiscal/nfse/layoutoneflow",
             null,
             body,
             cancellationToken);
@@ -125,6 +153,21 @@ public sealed class OneFlowService
                 ["cpf"] = cpf,
                 ["matricula"] = matricula,
                 ["idEvento"] = idEvento
+            },
+            null,
+            cancellationToken);
+
+    public Task<UpstreamResponse> GetRubricasDadosBasicosAsync(
+        string competencia,
+        string? rubrica,
+        CancellationToken cancellationToken) =>
+        _client.SendAsync(
+            HttpMethod.Get,
+            "oneflow/empresa/folha/rubrica/dadosbasicos",
+            new Dictionary<string, string?>
+            {
+                ["competencia"] = competencia,
+                ["rubrica"] = rubrica
             },
             null,
             cancellationToken);
@@ -269,5 +312,29 @@ public sealed class OneFlowService
                 ["codigo"] = codigo
             },
             null,
+            cancellationToken);
+
+    public Task<UpstreamResponse> GetObrigacoesGeralAsync(CancellationToken cancellationToken) =>
+        _client.SendAsync(
+            HttpMethod.Get,
+            "oneflow/empresa/obrigacoes/geral",
+            null,
+            null,
+            cancellationToken);
+
+    public Task<UpstreamResponse> GetObrigacoesListarAsync(CancellationToken cancellationToken) =>
+        _client.SendAsync(
+            HttpMethod.Get,
+            "oneflow/empresa/obrigacoes/listar",
+            null,
+            null,
+            cancellationToken);
+
+    public Task<UpstreamResponse> PostObrigacoesIncluirAsync(JsonElement body, CancellationToken cancellationToken) =>
+        _client.SendAsync(
+            HttpMethod.Post,
+            "oneflow/empresa/obrigacoes/incluir",
+            null,
+            body,
             cancellationToken);
 }
