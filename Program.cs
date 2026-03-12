@@ -37,6 +37,58 @@ api.MapGet("/fiscal/documentos/totais", async (HttpRequest request, OneFlowServi
     return response.ToResult();
 });
 
+api.MapGet("/fiscal/documentos/quantidade", async (HttpRequest request, OneFlowService service, CancellationToken cancellationToken) =>
+{
+    var competencia = RequestValidators.RequiredCompetencia(request.Query["competencia"], "competencia");
+    var response = await service.GetDocumentosQuantidadeAsync(competencia, cancellationToken);
+    return response.ToResult();
+});
+
+api.MapGet("/fiscal/documentos/listar", async (HttpRequest request, OneFlowService service, CancellationToken cancellationToken) =>
+{
+    var competencia = RequestValidators.RequiredCompetencia(request.Query["competencia"], "competencia");
+    var response = await service.GetDocumentosListarAsync(competencia, cancellationToken);
+    return response.ToResult();
+});
+
+api.MapGet("/fiscal/apuracoes", async (HttpRequest request, OneFlowService service, CancellationToken cancellationToken) =>
+{
+    var competencia = RequestValidators.RequiredCompetencia(request.Query["competencia"], "competencia");
+    var response = await service.GetApuracoesFiscaisAsync(competencia, cancellationToken);
+    return response.ToResult();
+});
+
+api.MapGet("/fiscal/simples-nacional/aliquotas", async (HttpRequest request, OneFlowService service, CancellationToken cancellationToken) =>
+{
+    var competencia = RequestValidators.RequiredCompetencia(request.Query["competencia"], "competencia");
+    var response = await service.GetAliquotasSimplesNacionalAsync(competencia, cancellationToken);
+    return response.ToResult();
+});
+
+api.MapPost("/fiscal/nfse/nacional", async (JsonElement body, OneFlowService service, CancellationToken cancellationToken) =>
+{
+    var response = await service.PostFiscalNfseNacionalAsync(body, cancellationToken);
+    return response.ToResult();
+});
+
+api.MapPost("/fiscal/nfse/prefeitura", async (JsonElement body, OneFlowService service, CancellationToken cancellationToken) =>
+{
+    var response = await service.PostFiscalNfsePrefeituraAsync(body, cancellationToken);
+    return response.ToResult();
+});
+
+api.MapPost("/fiscal/documentos/remover", async (JsonElement body, OneFlowService service, CancellationToken cancellationToken) =>
+{
+    var response = await service.PostFiscalDocumentoRemoverAsync(body, cancellationToken);
+    return response.ToResult();
+});
+
+api.MapPost("/fiscal/documentos/alterar-status", async (JsonElement body, OneFlowService service, CancellationToken cancellationToken) =>
+{
+    var response = await service.PostFiscalDocumentoAlterarStatusAsync(body, cancellationToken);
+    return response.ToResult();
+});
+
 api.MapPost("/folha/variaveis", async (JsonElement body, OneFlowService service, CancellationToken cancellationToken) =>
 {
     var response = await service.PostVariaveisFolhaAsync(body, cancellationToken);
@@ -82,9 +134,63 @@ api.MapGet("/folha/datas", async (HttpRequest request, OneFlowService service, C
     return response.ToResult();
 });
 
+api.MapGet("/folha/status", async (HttpRequest request, OneFlowService service, CancellationToken cancellationToken) =>
+{
+    var competencia = RequestValidators.RequiredCompetencia(request.Query["competencia"], "competencia");
+    var response = await service.GetStatusFolhaAsync(competencia, cancellationToken);
+    return response.ToResult();
+});
+
+api.MapGet("/folha/fator-r", async (HttpRequest request, OneFlowService service, CancellationToken cancellationToken) =>
+{
+    var competencia = RequestValidators.RequiredCompetencia(request.Query["competencia"], "competencia");
+    var response = await service.GetFatorRAsync(competencia, cancellationToken);
+    return response.ToResult();
+});
+
 api.MapPost("/contabilidade/lancamentos", async (JsonElement body, OneFlowService service, CancellationToken cancellationToken) =>
 {
     var response = await service.PostLancamentoContabilAsync(body, cancellationToken);
+    return response.ToResult();
+});
+
+api.MapPost("/contabilidade/lancamentos/transacao", async (JsonElement body, OneFlowService service, CancellationToken cancellationToken) =>
+{
+    var response = await service.PostLancamentoContabilTransacaoAsync(body, cancellationToken);
+    return response.ToResult();
+});
+
+api.MapPost("/contabilidade/lancamentos/padrao", async (JsonElement body, OneFlowService service, CancellationToken cancellationToken) =>
+{
+    var response = await service.PostLancamentoContabilPadraoAsync(body, cancellationToken);
+    return response.ToResult();
+});
+
+api.MapPost("/contabilidade/lancamentos/excluir", async (JsonElement body, OneFlowService service, CancellationToken cancellationToken) =>
+{
+    var response = await service.PostExcluirLancamentoContabilAsync(body, cancellationToken);
+    return response.ToResult();
+});
+
+api.MapPost("/contabilidade/lancamentos/excluir-transacao", async (JsonElement body, OneFlowService service, CancellationToken cancellationToken) =>
+{
+    var response = await service.PostExcluirLancamentoContabilTransacaoAsync(body, cancellationToken);
+    return response.ToResult();
+});
+
+api.MapPost("/contabilidade/lancamentos/excluir-padrao", async (JsonElement body, OneFlowService service, CancellationToken cancellationToken) =>
+{
+    var response = await service.PostExcluirLancamentoContabilPadraoAsync(body, cancellationToken);
+    return response.ToResult();
+});
+
+api.MapGet("/contabilidade/plano-contas", async (HttpRequest request, OneFlowService service, CancellationToken cancellationToken) =>
+{
+    var id = RequestValidators.OptionalPositiveInt(request.Query["id"], "id");
+    var pagina = RequestValidators.OptionalPositiveInt(request.Query["pagina"], "pagina");
+    RequestValidators.RequireAtLeastOne(id, pagina, "id", "pagina");
+
+    var response = await service.GetPlanoContasAsync(id, pagina, cancellationToken);
     return response.ToResult();
 });
 
@@ -95,6 +201,16 @@ api.MapGet("/contabilidade/balancete", async (HttpRequest request, OneFlowServic
     var zeramento = RequestValidators.RequiredAllowedValue(request.Query["zeramento"], "zeramento", ["S", "N"]);
 
     var response = await service.GetBalanceteAsync(competenciaInicial, competenciaFinal, zeramento, cancellationToken);
+    return response.ToResult();
+});
+
+api.MapGet("/contabilidade/razao", async (HttpRequest request, OneFlowService service, CancellationToken cancellationToken) =>
+{
+    var conta = RequestValidators.RequiredString(request.Query["conta"], "conta");
+    var competenciaInicial = RequestValidators.RequiredCompetencia(request.Query["competenciaInicial"], "competenciaInicial");
+    var competenciaFinal = RequestValidators.RequiredCompetencia(request.Query["competenciaFinal"], "competenciaFinal");
+
+    var response = await service.GetRazaoAsync(conta, competenciaInicial, competenciaFinal, cancellationToken);
     return response.ToResult();
 });
 

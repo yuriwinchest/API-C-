@@ -80,19 +80,36 @@ Resposta esperada:
 | `GET` | `/api/oneflow/folha/trabalhadores/eventos` | `/oneflow/empresa/folha/trabalhador/eventos` |
 | `GET` | `/api/oneflow/folha/holerites/totais` | `/oneflow/empresa/folha/recibos/totais` |
 | `GET` | `/api/oneflow/folha/datas` | `/oneflow/empresa/folha/datas` |
+| `GET` | `/api/oneflow/folha/status` | `/oneflow/empresa/folha/statusfolha` |
+| `GET` | `/api/oneflow/folha/fator-r` | `/oneflow/empresa/folha/fatorr` |
 
 ### Fiscal
 
 | Metodo | Endpoint interno | Endpoint OneFlow |
 | --- | --- | --- |
+| `POST` | `/api/oneflow/fiscal/nfse/nacional` | `/oneflow/empresa/fiscal/nfse/nacional` |
+| `POST` | `/api/oneflow/fiscal/nfse/prefeitura` | `/oneflow/empresa/fiscal/nfse/prefeitura` |
+| `POST` | `/api/oneflow/fiscal/documentos/remover` | `/oneflow/empresa/fiscal/documentos/remover` |
+| `POST` | `/api/oneflow/fiscal/documentos/alterar-status` | `/oneflow/empresa/fiscal/documentos/alterarstatus` |
 | `GET` | `/api/oneflow/fiscal/documentos/totais` | `/oneflow/empresa/fiscal/documentos/totais` |
+| `GET` | `/api/oneflow/fiscal/documentos/quantidade` | `/oneflow/empresa/fiscal/documentos/quantidade` |
+| `GET` | `/api/oneflow/fiscal/documentos/listar` | `/oneflow/empresa/fiscal/documentos/listar` |
+| `GET` | `/api/oneflow/fiscal/apuracoes` | `/oneflow/empresa/fiscal/apuracao/listar` |
+| `GET` | `/api/oneflow/fiscal/simples-nacional/aliquotas` | `/oneflow/empresa/fiscal/simplesnacional/aliquotas` |
 
 ### Contabilidade
 
 | Metodo | Endpoint interno | Endpoint OneFlow |
 | --- | --- | --- |
+| `GET` | `/api/oneflow/contabilidade/plano-contas` | `/oneflow/empresa/contabil/planocontas/contas` |
 | `POST` | `/api/oneflow/contabilidade/lancamentos` | `/oneflow/empresa/contabil/lancamentos/gerarlancamento` |
+| `POST` | `/api/oneflow/contabilidade/lancamentos/transacao` | `/oneflow/empresa/contabil/lancamentos/gerartransacao` |
+| `POST` | `/api/oneflow/contabilidade/lancamentos/padrao` | `/oneflow/empresa/contabil/lancamentos/gerarpadrao` |
+| `POST` | `/api/oneflow/contabilidade/lancamentos/excluir` | `/oneflow/empresa/contabil/lancamentos/excluirlancamento` |
+| `POST` | `/api/oneflow/contabilidade/lancamentos/excluir-transacao` | `/oneflow/empresa/contabil/lancamentos/excluirtransacao` |
+| `POST` | `/api/oneflow/contabilidade/lancamentos/excluir-padrao` | `/oneflow/empresa/contabil/lancamentos/excluirpadrao` |
 | `GET` | `/api/oneflow/contabilidade/balancete` | `/oneflow/empresa/contabil/balancete` |
+| `GET` | `/api/oneflow/contabilidade/razao` | `/oneflow/empresa/contabil/razao` |
 
 ### Guias e obrigacoes
 
@@ -107,6 +124,7 @@ Resposta esperada:
 - `tipoFolha`: inteiro positivo
 - `zeramento`: `S` ou `N`
 - `codigo`: codigo da obrigacao no OneFlow
+- `id` ou `pagina`: pelo menos um dos dois deve ser informado em `plano-contas`
 
 ## Observacoes importantes
 

@@ -44,6 +44,22 @@ public static class RequestValidators
         return parsedValue;
     }
 
+    public static int? OptionalPositiveInt(StringValues values, string fieldName)
+    {
+        var value = values.ToString().Trim();
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return null;
+        }
+
+        if (!int.TryParse(value, out var parsedValue) || parsedValue <= 0)
+        {
+            throw ValidationException(fieldName, $"O campo {fieldName} deve ser um inteiro positivo.");
+        }
+
+        return parsedValue;
+    }
+
     public static string RequiredAllowedValue(StringValues values, string fieldName, IReadOnlyCollection<string> allowedValues)
     {
         var value = RequiredString(values, fieldName);
@@ -58,6 +74,24 @@ public static class RequestValidators
     public static void RequireAtLeastOne(string? firstValue, string? secondValue, string firstField, string secondField)
     {
         if (string.IsNullOrWhiteSpace(firstValue) && string.IsNullOrWhiteSpace(secondValue))
+        {
+            throw new AppException(400, "Falha de validacao da requisicao.", new
+            {
+                erros = new[]
+                {
+                    new
+                    {
+                        caminho = firstField,
+                        mensagem = $"Informe ao menos {firstField} ou {secondField}."
+                    }
+                }
+            });
+        }
+    }
+
+    public static void RequireAtLeastOne(int? firstValue, int? secondValue, string firstField, string secondField)
+    {
+        if (!firstValue.HasValue && !secondValue.HasValue)
         {
             throw new AppException(400, "Falha de validacao da requisicao.", new
             {
