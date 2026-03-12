@@ -89,6 +89,70 @@ Observacoes:
 - Se `INTERNAL_API_KEY` estiver preenchida no `.env`, os endpoints `/api/oneflow/...` exigirao o header `X-Internal-Api-Key`.
 - O Swagger e o Scalar servem para explorar e testar os endpoints visualmente no ambiente local.
 
+## Smoke check final local
+
+Para validar rapidamente o ambiente local ja configurado, execute:
+
+```powershell
+pwsh -File .\scripts\FinalSmokeTest.ps1
+```
+
+Esse script:
+
+- le o `.env`
+- sobe a API localmente
+- valida `health`, `swagger`, autenticacao interna e status de configuracao
+- executa uma chamada real em `/api/oneflow/guias/obrigacoes/geral`
+- encerra o processo ao final
+
+Se a API ja estiver rodando e voce quiser reaproveitar a instancia atual:
+
+```powershell
+pwsh -File .\scripts\FinalSmokeTest.ps1 -UseRunningApi
+```
+
+## Entrega para o cliente
+
+Para entregar esta API ao cliente sem expor segredos no GitHub:
+
+1. O cliente baixa o projeto normalmente do repositorio.
+2. O arquivo de credenciais deve ser enviado fora do GitHub, por canal privado.
+3. O cliente copia o arquivo recebido para a raiz do projeto com o nome `.env`.
+4. O cliente executa o smoke check final para confirmar que o ambiente local ficou valido.
+
+Observacoes importantes:
+
+- o repositorio deve continuar sem segredos versionados
+- `.env` e `original.env` nao devem ser enviados para o GitHub
+- o arquivo enviado por WhatsApp serve apenas para uso local ou ambiente privado controlado
+- antes de homologar, o cliente deve rodar `pwsh -File .\scripts\FinalSmokeTest.ps1`
+
+## Integracao com sistema externo
+
+Esta API foi desenhada para ser consumida por outro sistema. O fluxo recomendado e:
+
+1. frontend da aplicacao principal
+2. backend ou camada de integracao da aplicacao principal
+3. esta API
+4. OneFlow
+
+Regra de seguranca:
+
+- a `INTERNAL_API_KEY` nao deve ficar exposta no navegador
+- o frontend nao deve chamar esta API diretamente se isso exigir expor a chave interna
+- a chave interna deve ser usada apenas no backend, proxy ou BFF da aplicacao principal
+
+Checklist minimo para o cliente integrar:
+
+1. baixar o projeto
+2. receber o arquivo `.env` por canal privado
+3. posicionar o `.env` na raiz
+4. executar `dotnet restore`
+5. executar `dotnet build`
+6. executar `pwsh -File .\scripts\FinalSmokeTest.ps1`
+7. subir a API com `dotnet run --project .\OneFlowApis.csproj`
+8. integrar o backend da aplicacao principal nos endpoints `/api/oneflow/...`
+
 ## Acesso e documentacao interativa
 
 - Swagger UI: `/docs`
