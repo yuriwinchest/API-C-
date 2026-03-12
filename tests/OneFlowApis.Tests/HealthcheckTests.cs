@@ -53,4 +53,17 @@ public sealed class HealthcheckTests : IClassFixture<WebApplicationFactory<Progr
         Assert.NotNull(payload);
         Assert.Equal("Falha de validacao da requisicao.", payload["mensagem"]?.ToString());
     }
+
+    [Fact]
+    public async Task AliasFiscalDetalhamento_DeveValidarCompetencia()
+    {
+        using var client = _factory.CreateClient();
+
+        var response = await client.GetAsync("/api/oneflow/fiscal/documentos/total/competencia?competencia=2025-01");
+        var payload = await response.Content.ReadFromJsonAsync<Dictionary<string, object>>();
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.NotNull(payload);
+        Assert.Equal("Falha de validacao da requisicao.", payload["mensagem"]?.ToString());
+    }
 }

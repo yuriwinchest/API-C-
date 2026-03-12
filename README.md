@@ -126,6 +126,19 @@ Resposta esperada:
 - `codigo`: codigo da obrigacao no OneFlow
 - `id` ou `pagina`: pelo menos um dos dois deve ser informado em `plano-contas`
 
+## Compatibilidade de contrato
+
+Para reduzir atrito com a documentacao operacional do cliente, a API expoe dois estilos de rota:
+
+- rotas padronizadas em kebab-case, como `/api/oneflow/fiscal/documentos/listar`
+- aliases compativeis com a nomenclatura legada dos materiais, como `/api/oneflow/fiscal/documentos/total/competencia`
+
+Os aliases foram adicionados para:
+
+- fiscal: `nfsenacional/incluir`, `nfseprefeitura/incluir`, `nfse/remove`, `nfsestatus/alterar`, `total/competencia`, `documentos/total/competencia`, `apuracao/competencia/imposto`, `aliquotas/simplesnacional/competencia`
+- folha: `variaveisfolha`, `dadosbasicostrabalhador/competencia`, `eventosdostrabalhadores/competencia`, `statusfolha/competencia`, `datasconfigurada/competencia`, `fatorr/competencia`, `recibos/totais/competencia`
+- contabilidade: `planocontas`, `lancamentos/conta`
+
 ## Observacoes importantes
 
 - O repositorio nao versiona segredos.
