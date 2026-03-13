@@ -52,6 +52,7 @@ Fluxo recomendado:
 
 - `GET /api/oneflow/configuracao/status`
 - `GET /api/oneflow/guias/obrigacoes/geral`
+- `GET /api/oneflow/escritorio/empresas/listar?pagina=1`
 
 ## Contrato homologado para integracao
 
@@ -73,6 +74,12 @@ Fluxo recomendado:
 
 - Listagem geral de guias e obrigacoes: `GET /api/oneflow/guias/obrigacoes/geral`
 - Consulta de anexos por competencia e codigo: `GET /api/oneflow/obrigacao/anexo`
+
+## Consulta de empresa cadastrada
+
+- dados basicos da empresa atual: `GET /api/oneflow/empresa/dados-basicos`
+- listagem de empresas do escritorio: `GET /api/oneflow/escritorio/empresas/listar?pagina=1`
+- detalhes por CNPJ: `GET /api/oneflow/escritorio/empresas/detalhes?cnpj=62907967000109`
 
 ## Evidencia minima esperada antes da homologacao
 

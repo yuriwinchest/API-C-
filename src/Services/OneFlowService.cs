@@ -322,6 +322,36 @@ public sealed class OneFlowService
             null,
             cancellationToken);
 
+    public Task<UpstreamResponse> GetEmpresaDadosBasicosAsync(CancellationToken cancellationToken) =>
+        _client.SendAsync(
+            HttpMethod.Get,
+            "oneflow/empresa/geral/dadosbasicos",
+            null,
+            null,
+            cancellationToken);
+
+    public Task<UpstreamResponse> GetEscritorioEmpresasListarAsync(int pagina, CancellationToken cancellationToken) =>
+        _client.SendAsync(
+            HttpMethod.Get,
+            "oneflow/escritorio/empresas/listar",
+            new Dictionary<string, string?>
+            {
+                ["pagina"] = pagina.ToString()
+            },
+            null,
+            cancellationToken);
+
+    public Task<UpstreamResponse> GetEscritorioEmpresasDetalhesAsync(string cnpj, CancellationToken cancellationToken) =>
+        _client.SendAsync(
+            HttpMethod.Get,
+            "oneflow/escritorio/empresas/detalhes",
+            new Dictionary<string, string?>
+            {
+                ["cnpj"] = cnpj
+            },
+            null,
+            cancellationToken);
+
     public Task<UpstreamResponse> GetObrigacoesListarAsync(CancellationToken cancellationToken) =>
         _client.SendAsync(
             HttpMethod.Get,

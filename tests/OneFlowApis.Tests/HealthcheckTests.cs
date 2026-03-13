@@ -95,6 +95,38 @@ public sealed class HealthcheckTests : IClassFixture<WebApplicationFactory<Progr
     }
 
     [Fact]
+    public async Task EscritorioEmpresasListar_DeveExigirPaginaPositiva()
+    {
+        using var environment = new TemporaryEnvironmentVariable("INTERNAL_API_KEY", "segredo-interno");
+        using var factory = CreateFactory();
+        using var client = factory.CreateClient();
+        AddInternalApiKeyHeader(client);
+
+        var response = await client.GetAsync("/api/oneflow/escritorio/empresas/listar?pagina=0");
+        var payload = await response.Content.ReadFromJsonAsync<Dictionary<string, object>>();
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.NotNull(payload);
+        Assert.Equal("Falha de validacao da requisicao.", payload["mensagem"]?.ToString());
+    }
+
+    [Fact]
+    public async Task EscritorioEmpresasDetalhes_DeveValidarCnpj()
+    {
+        using var environment = new TemporaryEnvironmentVariable("INTERNAL_API_KEY", "segredo-interno");
+        using var factory = CreateFactory();
+        using var client = factory.CreateClient();
+        AddInternalApiKeyHeader(client);
+
+        var response = await client.GetAsync("/api/oneflow/escritorio/empresas/detalhes?cnpj=123");
+        var payload = await response.Content.ReadFromJsonAsync<Dictionary<string, object>>();
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.NotNull(payload);
+        Assert.Equal("Falha de validacao da requisicao.", payload["mensagem"]?.ToString());
+    }
+
+    [Fact]
     public async Task ConfiguracaoStatus_DeveResponderSemExporSegredos()
     {
         using var environment = new TemporaryEnvironmentVariable("INTERNAL_API_KEY", "segredo-interno");

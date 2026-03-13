@@ -81,6 +81,57 @@ public sealed class RouteContractTests
         Assert.Equal("?competencia=202501&codigo=1", request.Query);
     }
 
+    [Fact]
+    public async Task EmpresaDadosBasicos_DeveConsumirEndpointOficial()
+    {
+        using var context = TestApiContext.Create();
+        using var client = context.Factory.CreateClient();
+        AddInternalApiKeyHeader(client);
+
+        var response = await client.GetAsync("/api/oneflow/empresa/dados-basicos");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+        var request = Assert.Single(context.Handler.Requests);
+        Assert.Equal(HttpMethod.Get.Method, request.Method);
+        Assert.Equal("/api/oneflow/empresa/geral/dadosbasicos", request.Path);
+        Assert.Equal(string.Empty, request.Query);
+    }
+
+    [Fact]
+    public async Task EscritorioEmpresasListar_DeveConsumirEndpointOficial()
+    {
+        using var context = TestApiContext.Create();
+        using var client = context.Factory.CreateClient();
+        AddInternalApiKeyHeader(client);
+
+        var response = await client.GetAsync("/api/oneflow/escritorio/empresas/listar?pagina=1");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+        var request = Assert.Single(context.Handler.Requests);
+        Assert.Equal(HttpMethod.Get.Method, request.Method);
+        Assert.Equal("/api/oneflow/escritorio/empresas/listar", request.Path);
+        Assert.Equal("?pagina=1", request.Query);
+    }
+
+    [Fact]
+    public async Task EscritorioEmpresasDetalhes_DeveSanitizarCnpjEConsumirEndpointOficial()
+    {
+        using var context = TestApiContext.Create();
+        using var client = context.Factory.CreateClient();
+        AddInternalApiKeyHeader(client);
+
+        var response = await client.GetAsync("/api/oneflow/escritorio/empresas/detalhes?cnpj=62.907.967/0001-09");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+        var request = Assert.Single(context.Handler.Requests);
+        Assert.Equal(HttpMethod.Get.Method, request.Method);
+        Assert.Equal("/api/oneflow/escritorio/empresas/detalhes", request.Path);
+        Assert.Equal("?cnpj=62907967000109", request.Query);
+    }
+
     private static void AddInternalApiKeyHeader(HttpClient client)
     {
         client.DefaultRequestHeaders.Remove(TestApiContext.InternalApiKeyHeaderName);

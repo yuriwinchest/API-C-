@@ -112,6 +112,8 @@ app.MapHealthEndpoints();
 var api = app.MapGroup("/api/oneflow").RequireAuthorization();
 
 api.MapDiagnosticEndpoints();
+api.MapEmpresaEndpoints();
+api.MapEscritorioEndpoints();
 api.MapFiscalEndpoints();
 api.MapFolhaEndpoints();
 api.MapContabilidadeEndpoints();

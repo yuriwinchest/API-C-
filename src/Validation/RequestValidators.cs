@@ -71,6 +71,19 @@ public static class RequestValidators
         return value;
     }
 
+    public static string RequiredCnpj(StringValues values, string fieldName)
+    {
+        var value = RequiredString(values, fieldName);
+        var normalized = new string(value.Where(char.IsDigit).ToArray());
+
+        if (normalized.Length != 14)
+        {
+            throw ValidationException(fieldName, $"O campo {fieldName} deve conter um CNPJ valido com 14 digitos.");
+        }
+
+        return normalized;
+    }
+
     public static void RequireAtLeastOne(string? firstValue, string? secondValue, string firstField, string secondField)
     {
         if (string.IsNullOrWhiteSpace(firstValue) && string.IsNullOrWhiteSpace(secondValue))

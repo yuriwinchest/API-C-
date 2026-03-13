@@ -201,6 +201,14 @@ Esse endpoint nao expoe segredos. Ele informa apenas se os campos obrigatorios e
 
 ## Endpoints internos
 
+### Empresa e escritorio
+
+| Metodo | Endpoint interno | Endpoint OneFlow |
+| --- | --- | --- |
+| `GET` | `/api/oneflow/empresa/dados-basicos` | `/oneflow/empresa/geral/dadosbasicos` |
+| `GET` | `/api/oneflow/escritorio/empresas/listar` | `/oneflow/escritorio/empresas/listar` |
+| `GET` | `/api/oneflow/escritorio/empresas/detalhes` | `/oneflow/escritorio/empresas/detalhes` |
+
 ### Folha de pagamento e trabalhador
 
 | Metodo | Endpoint interno | Endpoint OneFlow |
@@ -308,6 +316,14 @@ Lista consolidada dos endpoints solicitados para integracao:
 
 - Listagem geral de guias e obrigacoes: `GET /api/oneflow/guias/obrigacoes/geral`
 - Consulta de anexos por competencia e codigo: `GET /api/oneflow/obrigacao/anexo`
+
+## Consulta de empresa cadastrada
+
+Para validar se uma empresa cadastrada existe no ambiente do OneFlow:
+
+- dados basicos da empresa atual do token: `GET /api/oneflow/empresa/dados-basicos`
+- listagem de empresas do escritorio: `GET /api/oneflow/escritorio/empresas/listar?pagina=1`
+- detalhes de uma empresa por CNPJ: `GET /api/oneflow/escritorio/empresas/detalhes?cnpj=62907967000109`
 
 ## Observacoes importantes
 
