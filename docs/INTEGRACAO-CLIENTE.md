@@ -48,6 +48,14 @@ Fluxo recomendado:
 - nao salvar `INTERNAL_API_KEY` em codigo JavaScript entregue ao navegador
 - usar a chave apenas no backend ou proxy seguro
 
+## Renovacao automatica do token
+
+Quando `ONEFLOW_COMPANY_TOKEN`, `ONEFLOW_COMPANY_REFRESH_TOKEN` e `ONEFLOW_COMPANY_APP_HASH` estao configurados:
+
+- a API tenta renovar automaticamente o token quando o OneFlow responder `401`
+- a mesma requisicao e repetida com o token renovado
+- se a aplicacao estiver usando um arquivo `.env` com permissao de escrita, o novo `token` e o novo `refresh_token` sao salvos automaticamente nele
+
 ## Endpoints iniciais recomendados para homologacao
 
 - `GET /api/oneflow/configuracao/status`

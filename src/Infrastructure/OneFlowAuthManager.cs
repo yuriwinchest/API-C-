@@ -1,6 +1,7 @@
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using Microsoft.Extensions.Logging;
 using OneFlowApis.Models;
 
@@ -15,6 +16,7 @@ public sealed class OneFlowAuthManager
 
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly OneFlowOptions _options;
+    private readonly IOneFlowCredentialStore _credentialStore;
     private readonly ILogger<OneFlowAuthManager> _logger;
     private readonly SemaphoreSlim _refreshLock = new(1, 1);
 
@@ -24,10 +26,12 @@ public sealed class OneFlowAuthManager
     public OneFlowAuthManager(
         IHttpClientFactory httpClientFactory,
         OneFlowOptions options,
+        IOneFlowCredentialStore credentialStore,
         ILogger<OneFlowAuthManager> logger)
     {
         _httpClientFactory = httpClientFactory;
         _options = options;
+        _credentialStore = credentialStore;
         _logger = logger;
         _token = options.CompanyToken;
         _refreshToken = options.CompanyRefreshToken;
@@ -100,6 +104,7 @@ public sealed class OneFlowAuthManager
 
             _token = refreshResponse.Token;
             _refreshToken = refreshResponse.RefreshToken;
+            _credentialStore.PersistRefreshedCredentials(_token, _refreshToken);
 
             _logger.LogInformation("Token da empresa renovado com sucesso.");
 
@@ -125,8 +130,10 @@ public sealed class OneFlowAuthManager
 
     private sealed class RefreshTokenResponse
     {
+        [JsonPropertyName("token")]
         public string? Token { get; init; }
 
+        [JsonPropertyName("refresh_token")]
         public string? RefreshToken { get; init; }
     }
 }

@@ -172,8 +172,10 @@ public sealed class RouteContractTests
                         services.RemoveAll<OneFlowOptions>();
                         services.RemoveAll<InternalApiSecurityOptions>();
                         services.RemoveAll<OneFlowResilienceOptions>();
+                        services.RemoveAll<IOneFlowCredentialStore>();
 
                         services.AddSingleton<IHttpClientFactory>(new FakeHttpClientFactory(handler));
+                        services.AddSingleton<IOneFlowCredentialStore, NoOpCredentialStore>();
                         services.AddSingleton(new OneFlowOptions
                         {
                             Port = 3000,
@@ -202,6 +204,13 @@ public sealed class RouteContractTests
         public void Dispose()
         {
             _factory.Dispose();
+        }
+    }
+
+    private sealed class NoOpCredentialStore : IOneFlowCredentialStore
+    {
+        public void PersistRefreshedCredentials(string token, string refreshToken)
+        {
         }
     }
 

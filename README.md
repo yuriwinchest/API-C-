@@ -183,6 +183,16 @@ GET /api/oneflow/configuracao/status
 
 Esse endpoint nao expoe segredos. Ele informa apenas se os campos obrigatorios e opcionais ja foram preenchidos para OneFlow, Omie e G-Click.
 
+## Renovacao automatica do token
+
+Quando `ONEFLOW_COMPANY_TOKEN`, `ONEFLOW_COMPANY_REFRESH_TOKEN` e `ONEFLOW_COMPANY_APP_HASH` estao configurados:
+
+- a API tenta renovar automaticamente o token quando o OneFlow responde `401`
+- a requisicao original e repetida com o token renovado
+- se existir um arquivo `.env` com permissao de escrita, o novo `token` e o novo `refresh_token` sao persistidos automaticamente nele
+
+Na pratica, isso evita que a integracao caia por expirar o JWT em execucoes continuas e tambem reduz o risco de falha apos reinicio da aplicacao.
+
 ## Seguranca aplicada
 
 - Autenticacao interna por header configuravel.

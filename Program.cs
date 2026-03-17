@@ -23,6 +23,7 @@ builder.Logging.AddJsonConsole();
 builder.Services.AddSingleton(oneFlowOptions);
 builder.Services.AddSingleton(internalApiSecurityOptions);
 builder.Services.AddSingleton(resilienceOptions);
+builder.Services.AddSingleton<IOneFlowCredentialStore, DotEnvOneFlowCredentialStore>();
 builder.Services.AddHttpClient("OneFlowUpstream", client =>
 {
     client.Timeout = Timeout.InfiniteTimeSpan;
