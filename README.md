@@ -197,6 +197,27 @@ Esses endpoints internos existem para operacao e suporte:
 
 Os endpoints acima nao devolvem o valor bruto do token nem do refresh token. Eles retornam apenas metadados e diagnosticos seguros para operacao.
 
+## O QUE FOI ALTERADO NA AUTENTICACAO
+
+As ultimas alteracoes deixaram a API pronta para operar em producao com menos risco operacional:
+
+- renovacao automatica do token da empresa quando houver expiracao
+- persistencia automatica do novo `token` e do novo `refresh_token` no `.env`, quando houver permissao de escrita
+- endpoints internos para diagnostico do token e refresh manual
+- mensagens de erro mais claras para falhas de autenticacao
+
+## POR QUE ISSO FOI ALTERADO
+
+O OneFlow/Omie nao trabalha com token definitivo. Se a aplicacao for publicada dependendo apenas de um JWT fixo, a integracao vai cair quando esse token expirar.
+
+Por isso, a API foi organizada para operar com:
+
+- `ONEFLOW_COMPANY_TOKEN`
+- `ONEFLOW_COMPANY_REFRESH_TOKEN`
+- `ONEFLOW_COMPANY_APP_HASH`
+
+Esse conjunto serve para bootstrap inicial e para renovacao automatica em producao.
+
 ## Renovacao automatica do token
 
 Quando `ONEFLOW_COMPANY_TOKEN`, `ONEFLOW_COMPANY_REFRESH_TOKEN` e `ONEFLOW_COMPANY_APP_HASH` estao configurados:
@@ -358,6 +379,7 @@ Para validar se uma empresa cadastrada existe no ambiente do OneFlow:
 - `App Key` e `App Secret` do Omie nao substituem o `ONEFLOW_COMPANY_TOKEN`.
 - A API ficou preparada para renovar automaticamente o token da empresa quando `ONEFLOW_COMPANY_REFRESH_TOKEN` e `ONEFLOW_COMPANY_APP_HASH` forem informados.
 - O fluxo manual via navegador ou link oficial do OneFlow continua servindo apenas para o bootstrap inicial das credenciais ou para recuperacao operacional. No dia a dia, a API renova sozinha.
+- O passo a passo operacional completo para gerar o conjunto inicial das credenciais esta em [docs/AUTENTICACAO-ONEFLOW-PRODUCAO.md](./docs/AUTENTICACAO-ONEFLOW-PRODUCAO.md).
 - Os payloads `POST` foram mantidos flexiveis para receber o JSON final conforme a modelagem oficial do OneFlow.
 - Os campos do Omie e do G-Click foram deixados preparados no `.env.example`, mas a integracao efetiva depende das credenciais reais do cliente.
 

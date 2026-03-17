@@ -4,6 +4,25 @@
 
 Este documento orienta a integracao da API com o sistema externo do cliente sem versionar segredos no GitHub.
 
+## O QUE FOI ALTERADO
+
+As ultimas alteracoes deixaram a autenticacao preparada para operacao real em producao:
+
+- renovacao automatica do token da empresa
+- persistencia do token renovado no `.env`, quando houver permissao
+- endpoint interno para diagnostico do token
+- endpoint interno para refresh manual
+
+## POR QUE ISSO FOI ALTERADO
+
+O OneFlow/Omie nao trabalha com token definitivo.
+
+Na pratica, isso significa que:
+
+- um JWT isolado nao deve ser tratado como credencial permanente
+- se a aplicacao subir sem `refresh_token` e `app_hash`, ela pode parar quando o token expirar
+- o fluxo correto para producao e gerar o conjunto inicial e deixar a API renovar automaticamente
+
 ## O que o cliente recebe
 
 - codigo-fonte pelo GitHub
@@ -74,6 +93,8 @@ Para a primeira carga do ambiente, ainda e necessario usar o fluxo oficial do On
 - `ONEFLOW_COMPANY_APP_HASH`
 
 Depois que esse conjunto inicial estiver no `.env`, a operacao normal deixa de depender de geracao manual frequente. A API passa a renovar o token automaticamente.
+
+O passo a passo operacional completo, com links e exemplos de chamada, esta em [AUTENTICACAO-ONEFLOW-PRODUCAO.md](./AUTENTICACAO-ONEFLOW-PRODUCAO.md).
 
 ## Contrato homologado para integracao
 
