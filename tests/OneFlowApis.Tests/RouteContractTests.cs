@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Headers;
 using System.Text;
+using System.Text.Json;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -132,6 +133,46 @@ public sealed class RouteContractTests
         Assert.Equal("?cnpj=62907967000109", request.Query);
     }
 
+    [Fact]
+    public async Task AutenticacaoStatus_DeveRetornarDiagnostico()
+    {
+        using var context = TestApiContext.Create();
+        using var client = context.Factory.CreateClient();
+        AddInternalApiKeyHeader(client);
+
+        var response = await client.GetAsync("/api/oneflow/autenticacao/status");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+        var payload = await response.Content.ReadAsStringAsync();
+        using var json = JsonDocument.Parse(payload);
+
+        Assert.True(json.RootElement.TryGetProperty("autenticacao", out var autenticacao));
+        Assert.True(autenticacao.GetProperty("renovacaoAutomatica").GetProperty("habilitada").GetBoolean());
+        Assert.True(autenticacao.GetProperty("persistencia").GetProperty("arquivoEnvEncontrado").ValueKind is JsonValueKind.True or JsonValueKind.False);
+    }
+
+    [Fact]
+    public async Task AutenticacaoRefreshManual_DeveConsumirEndpointDoPortalOmie()
+    {
+        using var context = TestApiContext.Create();
+        using var client = context.Factory.CreateClient();
+        AddInternalApiKeyHeader(client);
+
+        var response = await client.PostAsync("/api/oneflow/autenticacao/refresh", content: null);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+        var request = Assert.Single(context.Handler.Requests);
+        Assert.Equal(HttpMethod.Get.Method, request.Method);
+        Assert.Equal("/api/portal/apps/app-hash-teste/refresh-token", request.Path);
+
+        var payload = await response.Content.ReadAsStringAsync();
+        using var json = JsonDocument.Parse(payload);
+
+        Assert.Equal("Token do OneFlow renovado com sucesso.", json.RootElement.GetProperty("mensagem").GetString());
+    }
+
     private static void AddInternalApiKeyHeader(HttpClient client)
     {
         client.DefaultRequestHeaders.Remove(TestApiContext.InternalApiKeyHeaderName);
@@ -212,6 +253,17 @@ public sealed class RouteContractTests
         public void PersistRefreshedCredentials(string token, string refreshToken)
         {
         }
+
+        public OneFlowCredentialStoreDiagnostics GetDiagnostics()
+        {
+            return new OneFlowCredentialStoreDiagnostics(
+                "somente-memoria",
+                false,
+                false,
+                null,
+                null,
+                null);
+        }
     }
 
     private sealed class FakeHttpClientFactory : IHttpClientFactory
@@ -247,7 +299,11 @@ public sealed class RouteContractTests
                 request.RequestUri?.Query ?? string.Empty,
                 body));
 
-            var payload = "{\"status\":\"ok\"}";
+            var payload = request.RequestUri?.AbsolutePath switch
+            {
+                "/api/portal/apps/app-hash-teste/refresh-token" => "{\"token\":\"token-renovado\",\"refresh_token\":\"refresh-renovado\"}",
+                _ => "{\"status\":\"ok\"}"
+            };
 
             return new HttpResponseMessage(HttpStatusCode.OK)
             {

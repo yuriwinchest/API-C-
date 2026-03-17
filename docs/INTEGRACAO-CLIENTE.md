@@ -55,12 +55,25 @@ Quando `ONEFLOW_COMPANY_TOKEN`, `ONEFLOW_COMPANY_REFRESH_TOKEN` e `ONEFLOW_COMPA
 - a API tenta renovar automaticamente o token quando o OneFlow responder `401`
 - a mesma requisicao e repetida com o token renovado
 - se a aplicacao estiver usando um arquivo `.env` com permissao de escrita, o novo `token` e o novo `refresh_token` sao salvos automaticamente nele
+- o endpoint `GET /api/oneflow/autenticacao/status` mostra o estado do token e da persistencia
+- o endpoint `POST /api/oneflow/autenticacao/refresh` permite forcar uma renovacao manual em caso de suporte ou validacao operacional
 
 ## Endpoints iniciais recomendados para homologacao
 
 - `GET /api/oneflow/configuracao/status`
+- `GET /api/oneflow/autenticacao/status`
 - `GET /api/oneflow/guias/obrigacoes/geral`
 - `GET /api/oneflow/escritorio/empresas/listar?pagina=1`
+
+## Como funciona a geracao inicial do token
+
+Para a primeira carga do ambiente, ainda e necessario usar o fluxo oficial do OneFlow/Omie para obter o conjunto inicial de:
+
+- `ONEFLOW_COMPANY_TOKEN`
+- `ONEFLOW_COMPANY_REFRESH_TOKEN`
+- `ONEFLOW_COMPANY_APP_HASH`
+
+Depois que esse conjunto inicial estiver no `.env`, a operacao normal deixa de depender de geracao manual frequente. A API passa a renovar o token automaticamente.
 
 ## Contrato homologado para integracao
 
@@ -95,6 +108,7 @@ Quando `ONEFLOW_COMPANY_TOKEN`, `ONEFLOW_COMPANY_REFRESH_TOKEN` e `ONEFLOW_COMPA
 - `GET /swagger/v1/swagger.json` retorna `200`
 - endpoint interno sem header retorna `401`
 - `GET /api/oneflow/configuracao/status` retorna que o ambiente esta pronto para teste
+- `GET /api/oneflow/autenticacao/status` retorna que a renovacao automatica esta habilitada
 - `GET /api/oneflow/guias/obrigacoes/geral` retorna dados reais do OneFlow
 
 ## Observacao final

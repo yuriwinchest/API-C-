@@ -181,7 +181,21 @@ Resposta esperada:
 GET /api/oneflow/configuracao/status
 ```
 
-Esse endpoint nao expoe segredos. Ele informa apenas se os campos obrigatorios e opcionais ja foram preenchidos para OneFlow, Omie e G-Click.
+Esse endpoint nao expoe segredos. Ele informa se os campos obrigatorios e opcionais ja foram preenchidos para OneFlow, Omie e G-Click e agora tambem devolve o diagnostico de autenticacao em runtime.
+
+## Diagnostico e operacao do token
+
+```http
+GET /api/oneflow/autenticacao/status
+POST /api/oneflow/autenticacao/refresh
+```
+
+Esses endpoints internos existem para operacao e suporte:
+
+- `GET /api/oneflow/autenticacao/status`: mostra se o token atual esta carregado, se o formato JWT foi reconhecido, quando ele expira em UTC, se a renovacao automatica esta habilitada e como esta a persistencia no `.env`
+- `POST /api/oneflow/autenticacao/refresh`: força uma renovacao manual do token usando `ONEFLOW_COMPANY_REFRESH_TOKEN` e `ONEFLOW_COMPANY_APP_HASH`
+
+Os endpoints acima nao devolvem o valor bruto do token nem do refresh token. Eles retornam apenas metadados e diagnosticos seguros para operacao.
 
 ## Renovacao automatica do token
 
@@ -190,6 +204,8 @@ Quando `ONEFLOW_COMPANY_TOKEN`, `ONEFLOW_COMPANY_REFRESH_TOKEN` e `ONEFLOW_COMPA
 - a API tenta renovar automaticamente o token quando o OneFlow responde `401`
 - a requisicao original e repetida com o token renovado
 - se existir um arquivo `.env` com permissao de escrita, o novo `token` e o novo `refresh_token` sao persistidos automaticamente nele
+- o diagnostico interno passa a mostrar o ultimo gatilho, o ultimo resultado e a ultima falha de refresh, quando existir
+- os erros de autenticacao retornam `correlationId` e um `codigo` interno para facilitar suporte
 
 Na pratica, isso evita que a integracao caia por expirar o JWT em execucoes continuas e tambem reduz o risco de falha apos reinicio da aplicacao.
 
@@ -341,6 +357,7 @@ Para validar se uma empresa cadastrada existe no ambiente do OneFlow:
 - A autenticacao interna fica desabilitada ate que `INTERNAL_API_KEY` seja preenchida no `.env`.
 - `App Key` e `App Secret` do Omie nao substituem o `ONEFLOW_COMPANY_TOKEN`.
 - A API ficou preparada para renovar automaticamente o token da empresa quando `ONEFLOW_COMPANY_REFRESH_TOKEN` e `ONEFLOW_COMPANY_APP_HASH` forem informados.
+- O fluxo manual via navegador ou link oficial do OneFlow continua servindo apenas para o bootstrap inicial das credenciais ou para recuperacao operacional. No dia a dia, a API renova sozinha.
 - Os payloads `POST` foram mantidos flexiveis para receber o JSON final conforme a modelagem oficial do OneFlow.
 - Os campos do Omie e do G-Click foram deixados preparados no `.env.example`, mas a integracao efetiva depende das credenciais reais do cliente.
 

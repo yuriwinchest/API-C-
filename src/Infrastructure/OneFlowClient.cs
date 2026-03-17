@@ -54,12 +54,39 @@ public sealed class OneFlowClient
                 catch (AppException exception) when (exception.StatusCode == 401 && _authManager.CanRefresh)
                 {
                     _logger.LogWarning(
-                        "Recebido 401 do OneFlow para {Method} {Path}. Tentando renovar o token.",
+                        "Recebido 401 do OneFlow para {Method} {Path}. Tentando renovar o token automaticamente.",
                         method.Method,
                         path);
 
-                    var refreshedToken = await _authManager.RefreshCompanyTokenAsync(innerCancellationToken);
-                    return await ExecuteAsync(method, path, query, body, refreshedToken, innerCancellationToken);
+                    try
+                    {
+                        var refreshedToken = await _authManager.RefreshCompanyTokenAsync(innerCancellationToken, "401-oneflow");
+                        return await ExecuteAsync(method, path, query, body, refreshedToken, innerCancellationToken);
+                    }
+                    catch (AppException refreshException)
+                    {
+                        throw new AppException(
+                            refreshException.StatusCode >= 500 ? refreshException.StatusCode : 502,
+                            "Falha ao renovar automaticamente o token da empresa para consumir o OneFlow.",
+                            new
+                            {
+                                codigo = "oneflow_refresh_automatico_falhou",
+                                causa = refreshException.Message,
+                                detalhes = refreshException.Details
+                            });
+                    }
+                }
+                catch (AppException exception) when (exception.StatusCode == 401)
+                {
+                    throw new AppException(
+                        401,
+                        "OneFlow rejeitou a autenticacao da empresa e a renovacao automatica nao esta disponivel.",
+                        new
+                        {
+                            codigo = "oneflow_unauthorized_sem_refresh",
+                            acao = "Configure ONEFLOW_COMPANY_TOKEN, ONEFLOW_COMPANY_REFRESH_TOKEN e ONEFLOW_COMPANY_APP_HASH.",
+                            detalhes = exception.Details
+                        });
                 }
                 catch (HttpRequestException exception)
                 {
@@ -109,7 +136,26 @@ public sealed class OneFlowClient
 
         if (!response.IsSuccessStatusCode)
         {
-            throw new AppException((int)response.StatusCode, "Falha ao consumir a API do OneFlow.", TryParseJson(content));
+            if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+            {
+                throw new AppException(
+                    401,
+                    "OneFlow rejeitou a autenticacao da empresa.",
+                    new
+                    {
+                        codigo = "oneflow_unauthorized",
+                        upstream = TryParseJson(content)
+                    });
+            }
+
+            throw new AppException(
+                (int)response.StatusCode,
+                "Falha ao consumir a API do OneFlow.",
+                new
+                {
+                    codigo = "oneflow_upstream_error",
+                    upstream = TryParseJson(content)
+                });
         }
 
         return new UpstreamResponse((int)response.StatusCode, content, contentType);

@@ -1,3 +1,4 @@
+using OneFlowApis.Infrastructure;
 using OneFlowApis.Models;
 
 namespace OneFlowApis.Endpoints;
@@ -6,10 +7,13 @@ public static class DiagnosticEndpoints
 {
     public static RouteGroupBuilder MapDiagnosticEndpoints(this RouteGroupBuilder api)
     {
-        api.MapGet("/configuracao/status", (
+        var diagnostico = api.MapGroup(string.Empty).WithTags("Infra");
+
+        diagnostico.MapGet("/configuracao/status", (
             OneFlowOptions oneFlowOptions,
             InternalApiSecurityOptions securityOptions,
-            OneFlowResilienceOptions resilienceOptions) => Results.Ok(new
+            OneFlowResilienceOptions resilienceOptions,
+            OneFlowAuthManager authManager) => Results.Ok(new
         {
             oneFlow = new
             {
@@ -51,9 +55,28 @@ public static class DiagnosticEndpoints
             prontoParaAutenticacaoInterna = securityOptions.IsConfigured,
             prontoParaGClick =
                 !string.IsNullOrWhiteSpace(oneFlowOptions.GClickClientId) &&
-                !string.IsNullOrWhiteSpace(oneFlowOptions.GClickClientSecret)
-        }))
-        .WithTags("Infra");
+                !string.IsNullOrWhiteSpace(oneFlowOptions.GClickClientSecret),
+            autenticacao = authManager.GetDiagnostics()
+        }));
+
+        diagnostico.MapGet("/autenticacao/status", (OneFlowAuthManager authManager) =>
+            Results.Ok(new
+            {
+                autenticacao = authManager.GetDiagnostics()
+            }));
+
+        diagnostico.MapPost("/autenticacao/refresh", async (
+            OneFlowAuthManager authManager,
+            CancellationToken cancellationToken) =>
+        {
+            await authManager.RefreshCompanyTokenAsync(cancellationToken, "endpoint-manual");
+
+            return Results.Ok(new
+            {
+                mensagem = "Token do OneFlow renovado com sucesso.",
+                autenticacao = authManager.GetDiagnostics()
+            });
+        });
 
         return api;
     }

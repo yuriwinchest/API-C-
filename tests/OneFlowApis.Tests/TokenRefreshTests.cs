@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Headers;
 using System.Text;
+using System.Text.Json;
 using Microsoft.Extensions.Logging;
 using OneFlowApis.Infrastructure;
 using OneFlowApis.Models;
@@ -127,6 +128,41 @@ public sealed class TokenRefreshTests
         Assert.Equal("refresh-renovado", credentialStore.RefreshToken);
     }
 
+    [Fact]
+    public void OneFlowAuthManager_DeveExporDiagnosticoDoToken()
+    {
+        var loggerFactory = LoggerFactory.Create(_ => { });
+        var httpClientFactory = new NamedHttpClientFactory(new Dictionary<string, HttpClient>
+        {
+            ["OneFlowUpstream"] = CreateClient("https://oneflow.test/api/", new SequencedHttpMessageHandler()),
+            ["OmiePortal"] = CreateClient("https://omie.test/api/portal/apps/", new SequencedHttpMessageHandler())
+        });
+        var options = new OneFlowOptions
+        {
+            Port = 3000,
+            OneFlowBaseUrl = "https://oneflow.test/api",
+            OmiePortalAppsBaseUrl = "https://omie.test/api/portal/apps",
+            CompanyToken = CreateJwt(DateTimeOffset.UtcNow.AddMinutes(30)),
+            CompanyRefreshToken = "refresh-valido",
+            CompanyAppHash = "app-hash"
+        };
+
+        var authManager = new OneFlowAuthManager(
+            httpClientFactory,
+            options,
+            new RecordingCredentialStore(),
+            loggerFactory.CreateLogger<OneFlowAuthManager>());
+
+        var diagnostics = authManager.GetDiagnostics();
+
+        Assert.True(diagnostics.Token.Configurado);
+        Assert.True(diagnostics.Token.FormatoJwtReconhecido);
+        Assert.NotNull(diagnostics.Token.Identificador);
+        Assert.False(diagnostics.Token.Expirado);
+        Assert.True(diagnostics.RenovacaoAutomatica.Habilitada);
+        Assert.Empty(diagnostics.RenovacaoAutomatica.ConfiguracoesAusentes);
+    }
+
     private static HttpClient CreateClient(string baseAddress, HttpMessageHandler handler)
     {
         return new HttpClient(handler, disposeHandler: false)
@@ -145,6 +181,17 @@ public sealed class TokenRefreshTests
         {
             Token = token;
             RefreshToken = refreshToken;
+        }
+
+        public OneFlowCredentialStoreDiagnostics GetDiagnostics()
+        {
+            return new OneFlowCredentialStoreDiagnostics(
+                "somente-memoria",
+                false,
+                false,
+                Token is not null && RefreshToken is not null,
+                null,
+                null);
         }
     }
 
@@ -209,5 +256,25 @@ public sealed class TokenRefreshTests
 
             return clone;
         }
+    }
+
+    private static string CreateJwt(DateTimeOffset expiresAtUtc)
+    {
+        var header = Base64UrlEncode("{\"alg\":\"HS256\",\"typ\":\"JWT\"}");
+        var payload = Base64UrlEncode(JsonSerializer.Serialize(new
+        {
+            exp = expiresAtUtc.ToUnixTimeSeconds(),
+            sub = "empresa-teste"
+        }));
+
+        return $"{header}.{payload}.assinatura";
+    }
+
+    private static string Base64UrlEncode(string value)
+    {
+        return Convert.ToBase64String(Encoding.UTF8.GetBytes(value))
+            .TrimEnd('=')
+            .Replace('+', '-')
+            .Replace('/', '_');
     }
 }

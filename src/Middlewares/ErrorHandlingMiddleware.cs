@@ -17,6 +17,8 @@ public sealed class ErrorHandlingMiddleware
 
     public async Task InvokeAsync(HttpContext context)
     {
+        var correlationId = ResolveCorrelationId(context);
+
         try
         {
             await _next(context);
@@ -36,7 +38,8 @@ public sealed class ErrorHandlingMiddleware
             await context.Response.WriteAsync(JsonSerializer.Serialize(new
             {
                 mensagem = exception.Message,
-                detalhes = exception.Details
+                detalhes = exception.Details,
+                correlationId
             }));
         }
         catch (BadHttpRequestException exception)
@@ -53,7 +56,8 @@ public sealed class ErrorHandlingMiddleware
             await context.Response.WriteAsync(JsonSerializer.Serialize(new
             {
                 mensagem = "Falha ao desserializar o corpo da requisicao.",
-                detalhes = exception.Message
+                detalhes = exception.Message,
+                correlationId
             }));
         }
         catch (Exception exception)
@@ -69,8 +73,17 @@ public sealed class ErrorHandlingMiddleware
 
             await context.Response.WriteAsync(JsonSerializer.Serialize(new
             {
-                mensagem = "Erro interno nao tratado."
+                mensagem = "Erro interno nao tratado.",
+                correlationId
             }));
         }
+    }
+
+    private static string ResolveCorrelationId(HttpContext context)
+    {
+        return context.Response.Headers.TryGetValue("X-Correlation-ID", out var correlationId) &&
+               !string.IsNullOrWhiteSpace(correlationId)
+            ? correlationId.ToString()
+            : context.TraceIdentifier;
     }
 }
